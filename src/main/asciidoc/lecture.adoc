@@ -1,0 +1,891 @@
+= Redis
+Иван Пономарев
+:revealjs_theme: black
+:revealjs_customtheme: white_course.css
+:revealjs_slideNumber:
+:revealjs_history:
+:revealjs_progress:
+:encoding: UTF-8
+:lang: ru
+include::_doc_general_attributes.adoc[]
+:doctype: article
+:toclevels: 3
+:imagesdir: images
+:source-highlighter: highlightjs
+:highlightjsdir: highlight
+:icons: font
+:iconfont-remote!:
+:iconfont-name: font-awesome-4.7.0/css/font-awesome
+:revealjs_mouseWheel: true
+:revealjs_center: false
+:revealjs_transition: none
+:revealjs_width: 1600
+:revealjs_height: 900
+:stem: latexmath
+
+
+//== Часть 1. Введение
+:!figure-caption:
+
+[%notitle]
+== Что такое Redis?
+
+image::logo.svg[]
+
+* **Re**mote **Di**ctionary **S**erver
+* In-memory key–value database
+* Different kinds of abstract data structure
+* #1 KV Store by popularity (according to https://db-engines.com/en/ranking/key-value+store[DB-Engines rankings])
+
+[%notitle]
+== Популярность
+image::popularity.png[]
+
+
+== История
+
+* 2009 год: Salvatore Sanfilippo aka antirez
+* TCL -> C
+* 2015: Redis Labs
+* June 2020: Salvatore Sanfilippo stepped down as Redis maintainer
+* Популярность огромна
+
+
+== Для чего используют?
+
+* Кэширование!
+* Координация работы микросервисов (в широком смысле слова)
+* Для сравнения: Default Max Connections
+** PostgreSQL: 100
+**  Redis: 10000
+
+== За счёт чего работает так быстро?
+
+* Весь датасет в памяти.
+* На диск сбрасывается снапшот или лог транзакций.
+* По умолчанию ~ 1 раз в 2 секунды.
+* *Аварийно завершившись, может потерять немного данных.*
+
+== Чем ещё хорош?
+
+* Salvatore любит вероятностные алгоритмы
+* Вероятностный алгоритм cache expiration
+* HyperLogLog
+
+== Redis -- однопоточная система
+
+* Изменения данных происходят в одном потоке, одно за другим.
+* За счёт этого -- изоляция и атомарность операций.
+
+== Почему так популярен?
+
+* Простота освоения / концептуальная простота
+* Производительность
+* Очень богатая функциональность! (почти что база данных)
+
+== Redis и ACID
+
+* *Atomicity:*
+** Есть много атомарных операций (`GETSET`, `SETNX` и т. п.)
+** Есть транзакции записи, выполняемые "одним куском" (но rollback-а в середине нет, поэтому если ошибка, то ¯\\_(ツ)_/¯)
+
+== Redis и ACID
+
+* *Consistency:*
+** Гарантий целостности, обычно предоставляемых базами данных, нет.
+** Роллбеки не поддерживаются, но есть optimistic lock, не позволяющий менять данные в случае потерянных обновлений.
+
+== Redis и ACID
+* *Isolation:*
+** Все записи и транзакции происходят по очереди, в одном потоке, изоляция полная.
+
+== Redis и ACID
+* *Durability:*
+** На диск данные периодически сохраняются, но между сохранениями могут немного потеряться ¯\\_(ツ)_/¯
+
+== Ограничения
+
+* Распределённый режим не является изначальной задумкой
+* Есть репликация master-slave, как у классических БД
+* Возможна кластеризация, но с ограничениями
+* Не fault-tolerant система, вроде Zookeeper/etcd или Cassandra!
+
+== Как попробовать?
+
+* Локально в докере
+
+** `docker run --name some-redis -d redis`
+
+** `docker exec -it some-redis redis-cli`
+
+* Песочница (только для некоторых команд)
+
+** https://try.redis.io/
+
+== Логическая структура: базы данных и ключи
+
+* База данных выбирается командой `SELECT`
+* Независимые пространства имён ключей
+
+[graphviz]
+--
+digraph G {
+  graph [ dpi = 180 ];
+  subgraph cluster_1 {
+    label = "database 0";
+    x0[shape="circle", label="A"];
+    x1[shape="triangle", label="B"];
+    x2[shape="star", label="C"];
+    x3[shape="square", label="D"];
+  }
+  
+  subgraph cluster_2 {
+    label = "database 1";
+    y0[shape="circle", label="A"];
+    y1[shape="triangle", label="B"];
+    y2[shape="star", label="C"];
+    y3[shape="square", label="D"];
+  }
+}
+--
+
+== Операции над базой данных
+
+* `FLUSHDB`
+* `FLUSHALL`
+* `KEYS pattern`
+* `RANDOMKEY`
+
+== Скалярные значения
+
+[graphviz]
+--
+digraph G {
+  graph [ dpi = 180 ];
+  node [shape=plaintext]
+  A[label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+  <TR><TD><B>key</B></TD>
+  <TD><B>value</B></TD>
+  </TR>
+  <TR><TD>my_key</TD><TD>my_value</TD></TR>
+  </TABLE>
+  >]
+}
+--
+
+[cols="33a,33a,33a"]
+|===
+| Общие
+| Строки
+| Числа
+|
+* `SET`
+* `GET`
+* `DEL`
+* `COPY`
+* `RENAME`
+* `EXISTS`
+|
+* `APPEND`
+* `SETRANGE`
+* `GETRANGE`
+* `STRLEN`
+* `STRALGO LCS [KEYS\|STRINGS]`
+|
+* `INCR`/`DECR`
+* `INCRBY`/`DECRBY`
+* `INCRBYFLOAT`
+|===
+
+== Комбинированные атомарные операции
+
+[cols="50a,50a"]
+|===
+| Комбинированные 
+| Мультиоперации
+|
+* `GETDEL`
+* `GETSET`
+* `SETNX`
+* `RENAMENX`
+* `SET key value [NX\|XX] [GET]`
+| 
+* `MGET`
+* `MSET`
+* `MSETNX`
+|===
+
+== Keys Expiration
+
+[cols="33a,33a,33a"]
+|===
+| Установить
+| Узнать
+| Сбросить
+|
+* `EXPIRE` / `PEXPIRE`
+* `EXPIREAT` / `PEXPIREAT`
+* `SETEX` / `PSETEX`
+* `GETEX` / `PGETEX`
+|
+* `TTL` / `PTTL`
+* `EXPIRETIME` / `PEXPIRETIME`
+| 
+* `PERSIST`
+|===
+
+== Как работает expiration
+
+[quote]
+--
+This is what Redis does 10 times per second:
+
+Test 20 random keys from the set of keys with an associated expire.
+Delete all the keys found expired.
+If more than 25% of keys were expired, start again from step 1.
+
+[...]This means that at any given moment the maximum amount of keys already expired that are using memory is at max equal to max amount of write operations per second divided by 4.
+--
+
+== Пример: Rate Limiter
+
+[source]
+----
+current = GET(ip)
+IF current != NULL AND current > 10 THEN
+    ERROR "too many requests per second"
+ELSE
+    value = INCR(ip)
+    IF value == 1 THEN
+        EXPIRE(ip,1) //<---PROBLEM!!
+    END
+    PERFORM_API_CALL()
+END
+----
+
+== Пример: Rate Limiter
+
+Используя `EVAL`, запускать атомарный Lua-скрипт на втором шаге:
+
+[source,lua]
+----
+local current
+current = redis.call("incr",KEYS[1])
+if current == 1 then
+    redis.call("expire",KEYS[1],1)
+end
+----
+
+== Bitmaps
+[cols="20a,80a"]
+|===
+|
+* `SETBIT`
+* `GETIT`
+* `BITOP`
+* `BITCOUNT`
+|
+
+[graphviz]
+--
+digraph G {
+  graph [ dpi = 180 ];
+  node [shape=plaintext]
+  A[label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+  <TR><TD><B>key</B></TD>
+  <TD COLSPAN="14"><B>value</B></TD>
+  </TR>
+  <TR><TD>my_bitmap</TD><TD>0</TD><TD>1</TD><TD>0</TD><TD>0</TD><TD>0</TD><TD>1</TD><TD>1</TD><TD>0</TD><TD>0</TD><TD>0</TD><TD>0</TD><TD>1</TD><TD>...</TD><TD>1</TD></TR>
+  </TABLE>
+  >]
+}
+--
+
+|===
+
+== Bloom filter
+
+image::bloom_filter.svg[{image-100-width}]
+
+
+== Hash fields
+
+[cols="33a,33a,33a"]
+|===
+|
+[graphviz]
+--
+digraph G {
+graph [ dpi = 200 ];
+node [shape=plaintext]
+ a[  label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+  <TR>
+    <TD><B>key</B></TD>
+    <TD><B>field</B></TD>
+    <TD><B>value</B></TD>
+  </TR>
+  <TR>
+    <TD ROWSPAN="3">foo</TD>
+    <TD>a</TD>
+    <TD>bar</TD>
+  </TR>
+    <TR>
+    <TD>b</TD>
+    <TD>7</TD>
+  </TR>
+    <TR>
+    <TD>c</TD>
+    <TD>42</TD>
+  </TR>
+</TABLE>>]
+
+}
+--
+|
+* `HSET`
+* `HGET`
+* `HDEL`
+* `HEXISTS`
+* `HINCRBY`
+* `HINCRBYFLOAT`
+* `HLEN`
+* `HRANDFIELD`
+
+|
+* `HMGET` 
+* `HMSET`
+* `HKEYS` 
+* `HVALS`
+* `HGETALL` 
+* `HSETNX`
+* `HSTRLEN`
+|===
+NB: expiration работает только на уровне структуры целиком, а не её отдельных ключей.
+
+== Lists
+
+[graphviz]
+--
+digraph G {
+  rankdir="LR";
+  graph [ dpi = 160 ];
+  node[shape="rect"]
+  
+  subgraph cluster_0 {
+    
+    E[shape="none" label="my_list"]
+  }
+  
+  subgraph cluster_1 {
+    A->B->C->D
+    D->C->B->A
+  }
+  E->A
+  E->D
+}
+--
+
+[cols="50a,50a"]
+|===
+| O(N) (N - длина списка)
+| O(1)
+|
+* `LINDEX`
+* `LRANGE` (весь список: `LRANGE my_list 0 -1`)
+* `LINSERT` 
+* `LPOS`
+* `LREM`
+* `LSET`
+* `LTRIM`
+|
+* `LLEN`
+* `LPOP` / `RPOP` 
+* `LPUSH` / `RPUSH` 
+* `LPUSHX` / `RPUSHX` 
+* `LMOVE` (перемещение между разными списками)
+|===
+
+== Блокирующие очереди
+
+* `BLPOP` / `BRPOP`
+* `BRPOPLPUSH` (deprecated в пользу `BLMOVE`)
+* `BLMOVE`
+
+== Надёжная очередь
+
+`BLPOPRPUSH` или `BLMOVE`
+
+[graphviz]
+--
+digraph G {
+  graph [ dpi = 180 ];
+  rankdir="LR";
+
+  node[shape="rect"]
+  
+  subgraph cluster_0 {
+    label="wating"  
+    A->B->C->D
+  }
+  
+  subgraph cluster_1 {
+    label="in process"
+    E->F
+  }
+  D->E[style="invis"]
+}
+--
+
+[graphviz]
+--
+digraph G {
+  rankdir="LR";
+  graph [ dpi = 180 ];
+  node[shape="rect"]
+  
+  subgraph cluster_0 {
+    label="wating"  
+    A->B->C
+  }
+  
+  subgraph cluster_1 {
+    label="in process"
+    D->E->F
+  }
+  C->D[style="invis"]
+}
+--
+
+== Sets
+
+[cols="25a,25a,25a,25a"]
+|===
+|Один элемент
+|Случайный +
+элемент
+|Множества
+|Перемещение между множествами
+|
+* `SADD`
+* `SREM`
+* `SCARD`
+* `SMEMBERS`
+* `SMISMEMBER`
+|
+* `SPOP`
+* `SRANDMEMBER`
+|
+* `SDIFF`
+* `SINTER`
+* `SINTERCARD`
+* `SUNION`
+|
+* `SMOVE`
+* `SDIFFSTORE`
+* `SINTERSTORE`
+* `SUNIONSTORE`
+|===
+
+== ZSets (sorted sets)
+
+[cols="50a,50a"]
+|===
+|
+
+[graphviz]
+--
+digraph G {
+graph [ dpi = 180 ];
+node [shape=plaintext]
+ a[label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+  <TR>
+    <TD><B>key</B></TD>
+    <TD><B>score</B></TD>
+    <TD><B>member</B></TD>
+  </TR>
+  <TR>
+    <TD rowspan="4">my_zset</TD>
+    <TD>5</TD>
+    <TD>entry1</TD>
+  </TR>
+  <TR>
+    <TD>6</TD>
+    <TD>entry2</TD>
+  </TR>
+  <TR>
+    <TD>7</TD>
+    <TD>entry3</TD>
+  </TR>
+    <TR>
+    <TD>8</TD>
+    <TD>entry4</TD>
+  </TR>
+</TABLE>>]
+}
+--
+|
+* members -- уникальны
+* отсортированы по score
+* если score одинаков, то сортируются лексикографически
+
+|===
+
+== ZSet commands
+
+[cols="33a,33a,33a"]
+|===
+|
+* `BZMPOP`
+* `BZPOPMAX`
+* `BZPOPMIN`
+* `ZADD`
+* `ZCARD`
+* `ZCOUNT`
+* `ZDIFF`
+* `ZDIFFSTORE`
+* `ZINCRBY`
+* `ZINTER`
+* `ZINTERCARD`
+|
+* `ZINTERSTORE`
+* `ZLEXCOUNT`
+* `ZMPOP`
+* `ZMSCORE`
+* `ZPOPMAX`
+* `ZPOPMIN`
+* `ZRANDMEMBER`
+* `ZRANGE`
+* `ZRANGEBYLEX`
+* `ZRANGEBYSCORE`
+* `ZRANGESTORE`
+* `ZRANK`
+|
+* `ZREM`
+* `ZREMRANGEBYLEX`
+* `ZREMRANGEBYRANK`
+* `ZREMRANGEBYSCORE`
+* `ZREVRANGE`
+* `ZREVRANGEBYLEX`
+* `ZREVRANGEBYSCORE`
+* `ZREVRANK`
+* `ZSCAN`
+* `ZSCORE`
+* `ZUNION`
+* `ZUNIONSTORE`
+|===
+
+== ZSets: Semaphore
+
+[graphviz]
+--
+digraph G {
+graph [ dpi = 180 ];
+node [shape=plaintext]
+ a[  label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+  <TR>
+    <TD rowspan="4">semaphore<br/>(ZSET)</TD>
+    <TD>id1</TD>
+    <TD>5</TD>
+  </TR>
+  <TR>
+    <TD>id2</TD>
+    <TD>6</TD>
+  </TR>
+    <TR>
+    <TD>id3</TD>
+    <TD>7</TD>
+  </TR>
+    <TR>
+    <TD>id4</TD>
+    <TD>8</TD>
+  </TR>
+</TABLE>>]
+
+ b[  label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+  <TR>
+    <TD>counter<br/>(INT)</TD>
+    <TD>8</TD>
+  </TR>
+</TABLE>>]
+}
+--
+
+[source]
+----
+rank = INCR counter
+ZADD semaphore my_id rank
+if ZRANK semaphore my_id < limit
+  //we can move on
+else
+  //we'll have to wait
+  ZREM semaphore my_id
+----
+
+
+== PUB/SUB
+
+Обмен сообщениями
+
+[cols="33a,33a,33a"]
+|===
+|Подписка на каналы
+|Подписка по паттернам
+|Метаданные
+|
+* `PUBLISH`
+* `SUBSCRIBE`
+* `UNSUBSCRIBE`
+|
+* `PSUBSCRIBE`
+* `PUNSUBSCRIBE`
+|
+* `PUBSUB CHANNELS`
+* `PUBSUB NUMPAT`
+* `PUBSUB NUMSUB`
+|===
+
+== Streams (почти Kafka)
+
+.https://redis.com/redis-enterprise/data-structures/
+image::streams-2.png[]
+
+
+Описание: https://redis.io/topics/streams-intro
+
+== HyperLogLog
+
+Подсчёт уникальных значений без сохранения самих значений
+
+* `PFADD`
+* `PFCOUNT`
+* `PFMERGE`
+
+(можно передавать между системами через `DUMP` / `RESTORE`)
+
+== Geo
+
+Геопространственный индекс с шарообразной моделью Земли
+
+[cols="40a,60a"]
+|===
+|
+image::earth_model.svg[]
+|
+* `GEOADD`
+* `GEODIST`
+* `GEOHASH`
+* `GEOPOS`
+* `GEORADIUS`
+* `GEORADIUSBYMEMBER`
+* `GEOSEARCH`
+* `GEOSEARCHSTORE`
+|===
+
+== Geo
+
+----
+redis>  GEOADD Sicily 
+  13.361389 38.115556 "Palermo" 
+  15.087269 37.502669 "Catania"
+(integer) 2
+
+redis>  GEODIST Sicily Palermo Catania
+"166274.1516"
+
+redis>  GEORADIUS Sicily 15 37 100 km
+1) "Catania"
+
+redis>  GEORADIUS Sicily 15 37 200 km
+1) "Palermo"
+2) "Catania"
+----
+
+== Скриптование на Lua
+
+* `EVAL`
+* `SCRIPT LOAD`
+* `SCRIPT EXISTS`
+* `EVALSHA`
+
+== Скриптование на Lua: примеры
+
+[source]
+----
+EVAL "return redis.call('set','foo','bar')" 0
+
+EVAL "return redis.call('set',KEYS[1],'bar')" 1 foo
+
+SCRIPT LOAD "return redis.call('set','foo','bar')"
+"2fa2b029f72572e803ff55a09b1282699aecae6a"
+
+EVALSHA 2fa2b029f72572e803ff55a09b1282699aecae6a 0
+----
+
+== Транзакции
+
+[cols="33a,33a,33a"]
+|===
+| Операции
+| Выполнение транзакции
+| Отмена выполнения
+|
+
+* `MULTI`
+* `EXEC`
+* `DISCARD`
+
+|
+[source]
+----
+> MULTI
+OK
+> INCR foo
+QUEUED
+> INCR bar
+QUEUED
+> EXEC
+1) (integer) 1
+2) (integer) 1
+----
+|
+[source]
+----
+> SET foo 1
+OK
+> MULTI
+OK
+> INCR foo
+QUEUED
+> DISCARD
+OK
+> GET foo
+"1"
+----
+|===
+
+== Оптимистичные блокировки
+
+[cols="50a,50a"]
+|===
+| Операции
+| Пример
+|
+
+* `WATCH`
+* `UNWATCH`
+|
+[source]
+----
+WATCH mykey
+val = GET mykey
+val = function(val)
+MULTI
+SET mykey $val
+EXEC
+----
+|===
+
+== Lock: захват блокировки
+
+В чём проблема?
+
+[source]
+----
+
+if not EXISTS lockname
+   SET lockname my_id
+else
+   //lock is acquired, let's try another time...
+----
+
+[.fragment]
+Между вызовами `EXISTS` и `SET` кто-то мог захватить блокировку.
+
+== Lock: захват блокировки
+
+За время, меньшее чем `timeout`, мы должны что-то сделать, иначе блокировка от нас отвалится!
+
+
+[source]
+----
+if SETNX lockname
+   EXPIRE lockname NX
+else
+   //lock is acquired, let's try another time...
+----
+
+Но в чём теперь проблема?
+
+== Lock: захват блокировки
+
+[source]
+----
+my_id = new guid
+//or use MULTI..EXEC
+if SET lockname my_id EX timeout NX 
+  //success!
+else
+  //lock is acquired, let's try another time...
+----
+
+
+== Lock: отпускание блокировки
+
+В чём проблема?
+
+[source]
+----
+DEL lockname
+----
+
+[.fragment]
+Пока мы работали, мы могли не заметить что блокировку у нас перехватили по таймауту.
+
+
+== Lock: отпускание блокировки
+
+В чём проблема?
+
+[source]
+----
+if GET lockname == my_id
+    DEL lockname
+----
+
+[.fragment]
+Перехват по таймауту мог произойти между вызовами `GET` и `DEL`.
+
+
+== Lock: отпускание блокировки
+
+[source]
+----
+WATCH lockname
+if GET lockname == my_id
+  //we're still holding the lock!
+  MULTI
+  //don't delete it if someone acquired the lock this moment... 
+  DEL lockname
+  EXEC
+  return 'lock released successfully'
+     
+return 'someone acquired our lock while we were busy...' 
+----
+
+(В действительности, это можно провернуть в Lua-скрипте простым if-ом без `WATCH/MULTI/EXEC`)
+
+== Redis in Action
+
+[cols="30a,70a"]
+|===
+| 
+image::redis-in-action.png[]
+|
+* Josiah Carlson
+* 2013 (довольно старая)
+* Доступна в электронном виде на redis.com
+|===
