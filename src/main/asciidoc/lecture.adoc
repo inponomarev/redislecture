@@ -26,6 +26,7 @@ include::_doc_general_attributes.adoc[]
 
 //== Часть 1. Введение
 :!figure-caption:
+image::redis.jpg[{image-30-width}]
 
 [%notitle]
 == Что такое Redis?
