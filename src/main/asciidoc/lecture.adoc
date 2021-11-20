@@ -22,7 +22,7 @@ include::_doc_general_attributes.adoc[]
 :revealjs_width: 1600
 :revealjs_height: 900
 :stem: latexmath
-
+:redisio: https://redis.io/commands/
 
 //== Часть 1. Введение
 :!figure-caption:
@@ -86,7 +86,7 @@ image::popularity.png[]
 == Redis и ACID
 
 * *Atomicity:*
-** Есть много атомарных операций (`GETSET`, `SETNX` и т. п.)
+** Есть много атомарных операций ({redisio}GETSET[`GETSET`], {redisio}SETNX[`SETNX`] и т. п.)
 ** Есть транзакции записи, выполняемые "одним куском" (но rollback-а в середине нет, поэтому если ошибка, то ¯\\_(ツ)_/¯)
 
 == Redis и ACID
@@ -124,7 +124,7 @@ image::popularity.png[]
 
 == Логическая структура: базы данных и ключи
 
-* База данных выбирается командой `SELECT`
+* База данных выбирается командой {redisio}SELECT[`SELECT`]
 * Независимые пространства имён ключей
 
 [graphviz]
@@ -151,10 +151,10 @@ digraph G {
 
 == Операции над базой данных
 
-* `FLUSHDB`
-* `FLUSHALL`
-* `KEYS pattern`
-* `RANDOMKEY`
+* {redisio}FLUSHDB[`FLUSHDB`]
+* {redisio}FLUSHALL[`FLUSHALL`]
+* {redisio}KEYS[`KEYS pattern`]
+* {redisio}RANDOMKEY[`RANDOMKEY`]
 
 == Скалярные значения
 
@@ -179,22 +179,22 @@ digraph G {
 | Строки
 | Числа
 |
-* `SET`
-* `GET`
-* `DEL`
-* `COPY`
-* `RENAME`
-* `EXISTS`
+* {redisio}SET[`SET`]
+* {redisio}GET[`GET`]
+* {redisio}DEL[`DEL`]
+* {redisio}COPY[`COPY`]
+* {redisio}RENAME[`RENAME`]
+* {redisio}EXISTS[`EXISTS`]
 |
-* `APPEND`
-* `SETRANGE`
-* `GETRANGE`
-* `STRLEN`
+* {redisio}APPEND[`APPEND`]
+* {redisio}SETRANGE[`SETRANGE`]
+* {redisio}GETRANGE[`GETRANGE`]
+* {redisio}STRLEN[`STRLEN`]
 * `STRALGO LCS [KEYS\|STRINGS]`
 |
-* `INCR`/`DECR`
-* `INCRBY`/`DECRBY`
-* `INCRBYFLOAT`
+* {redisio}INCR[`INCR`]/{redisio}DECR[`DECR`]
+* {redisio}INCRBY[`INCRBY`]/{redisio}DECRBY[`DECRBY`]
+* {redisio}INCRBYFLOAT[`INCRBYFLOAT`]
 |===
 
 == Комбинированные атомарные операции
@@ -204,15 +204,15 @@ digraph G {
 | Комбинированные 
 | Мультиоперации
 |
-* `GETDEL`
-* `GETSET`
-* `SETNX`
-* `RENAMENX`
+* {redisio}GETDEL[`GETDEL`]
+* {redisio}GETSET[`GETSET`]
+* {redisio}SETNX[`SETNX`]
+* {redisio}RENAMENX[`RENAMENX`]
 * `SET key value [NX\|XX] [GET]`
 | 
-* `MGET`
-* `MSET`
-* `MSETNX`
+* {redisio}MGET[`MGET`]
+* {redisio}MSET[`MSET`]
+* {redisio}MSETNX[`MSETNX`]
 |===
 
 == Keys Expiration
@@ -223,15 +223,15 @@ digraph G {
 | Узнать
 | Сбросить
 |
-* `EXPIRE` / `PEXPIRE`
-* `EXPIREAT` / `PEXPIREAT`
-* `SETEX` / `PSETEX`
-* `GETEX` / `PGETEX`
+* {redisio}EXPIRE[`EXPIRE`] / {redisio}PEXPIRE[`PEXPIRE`]
+* {redisio}EXPIREAT[`EXPIREAT`] / {redisio}PEXPIREAT[`PEXPIREAT`]
+* {redisio}SETEX[`SETEX`] / {redisio}PSETEX[`PSETEX`]
+* {redisio}GETEX[`GETEX`] / {redisio}PGETEX[`PGETEX`]
 |
-* `TTL` / `PTTL`
-* `EXPIRETIME` / `PEXPIRETIME`
+* {redisio}TTL[`TTL`] / {redisio}PTTL[`PTTL`]
+* {redisio}EXPIRETIME[`EXPIRETIME`] / {redisio}PEXPIRETIME[`PEXPIRETIME`]
 | 
-* `PERSIST`
+* {redisio}PERSIST[`PERSIST`]
 |===
 
 == Как работает expiration
@@ -265,7 +265,7 @@ END
 
 == Пример: Rate Limiter
 
-Используя `EVAL`, запускать атомарный Lua-скрипт на втором шаге:
+Используя {redisio}EVAL[`EVAL`], запускать атомарный Lua-скрипт на втором шаге:
 
 [source,lua]
 ----
@@ -280,10 +280,10 @@ end
 [cols="20a,80a"]
 |===
 |
-* `SETBIT`
-* `GETIT`
-* `BITOP`
-* `BITCOUNT`
+* {redisio}SETBIT[`SETBIT`]
+* {redisio}GETIT[`GETIT`]
+* {redisio}BITOP[`BITOP`]
+* {redisio}BITCOUNT[`BITCOUNT`]
 |
 
 [graphviz]
@@ -343,23 +343,23 @@ node [shape=plaintext]
 }
 --
 |
-* `HSET`
-* `HGET`
-* `HDEL`
-* `HEXISTS`
-* `HINCRBY`
-* `HINCRBYFLOAT`
-* `HLEN`
-* `HRANDFIELD`
+* {redisio}HSET[`HSET`]
+* {redisio}HGET[`HGET`]
+* {redisio}HDEL[`HDEL`]
+* {redisio}HEXISTS[`HEXISTS`]
+* {redisio}HINCRBY[`HINCRBY`]
+* {redisio}HINCRBYFLOAT[`HINCRBYFLOAT`]
+* {redisio}HLEN[`HLEN`]
+* {redisio}HRANDFIELD[`HRANDFIELD`]
 
 |
-* `HMGET` 
-* `HMSET`
-* `HKEYS` 
-* `HVALS`
-* `HGETALL` 
-* `HSETNX`
-* `HSTRLEN`
+* {redisio}HMGET[`HMGET`] 
+* {redisio}HMSET[`HMSET`]
+* {redisio}HKEYS[`HKEYS`] 
+* {redisio}HVALS[`HVALS`]
+* {redisio}HGETALL[`HGETALL`] 
+* {redisio}HSETNX[`HSETNX`]
+* {redisio}HSTRLEN[`HSTRLEN`]
 |===
 NB: expiration работает только на уровне структуры целиком, а не её отдельных ключей.
 
@@ -391,30 +391,30 @@ digraph G {
 | O(N) (N - длина списка)
 | O(1)
 |
-* `LINDEX`
-* `LRANGE` (весь список: `LRANGE my_list 0 -1`)
-* `LINSERT` 
-* `LPOS`
-* `LREM`
-* `LSET`
-* `LTRIM`
+* {redisio}LINDEX[`LINDEX`]
+* {redisio}LRANGE[`LRANGE`] (весь список: `LRANGE my_list 0 -1`)
+* {redisio}LINSERT[`LINSERT`] 
+* {redisio}LPOS[`LPOS`]
+* {redisio}LREM[`LREM`]
+* {redisio}LSET[`LSET`]
+* {redisio}LTRIM[`LTRIM`]
 |
-* `LLEN`
-* `LPOP` / `RPOP` 
-* `LPUSH` / `RPUSH` 
-* `LPUSHX` / `RPUSHX` 
-* `LMOVE` (перемещение между разными списками)
+* {redisio}LLEN[`LLEN`]
+* {redisio}LPOP[`LPOP`] / {redisio}RPOP[`RPOP`] 
+* {redisio}LPUSH[`LPUSH`] / {redisio}RPUSH[`RPUSH`] 
+* {redisio}LPUSHX[`LPUSHX`] / {redisio}RPUSHX[`RPUSHX`] 
+* {redisio}LMOVE[`LMOVE`] (перемещение между разными списками)
 |===
 
 == Блокирующие очереди
 
-* `BLPOP` / `BRPOP`
-* `BRPOPLPUSH` (deprecated в пользу `BLMOVE`)
-* `BLMOVE`
+* {redisio}BLPOP[`BLPOP`] / {redisio}BRPOP[`BRPOP`]
+* {redisio}BRPOPLPUSH[`BRPOPLPUSH`] (deprecated в пользу {redisio}BLMOVE[`BLMOVE`])
+* {redisio}BLMOVE[`BLMOVE`]
 
 == Надёжная очередь
 
-`BLPOPRPUSH` или `BLMOVE`
+{redisio}BLPOPRPUSH[`BLPOPRPUSH`] или {redisio}BLMOVE[`BLMOVE`]
 
 [graphviz]
 --
@@ -467,24 +467,24 @@ digraph G {
 |Множества
 |Перемещение между множествами
 |
-* `SADD`
-* `SREM`
-* `SCARD`
-* `SMEMBERS`
-* `SMISMEMBER`
+* {redisio}SADD[`SADD`]
+* {redisio}SREM[`SREM`]
+* {redisio}SCARD[`SCARD`]
+* {redisio}SMEMBERS[`SMEMBERS`]
+* {redisio}SMISMEMBER[`SMISMEMBER`]
 |
-* `SPOP`
-* `SRANDMEMBER`
+* {redisio}SPOP[`SPOP`]
+* {redisio}SRANDMEMBER[`SRANDMEMBER`]
 |
-* `SDIFF`
-* `SINTER`
-* `SINTERCARD`
-* `SUNION`
+* {redisio}SDIFF[`SDIFF`]
+* {redisio}SINTER[`SINTER`]
+* {redisio}SINTERCARD[`SINTERCARD`]
+* {redisio}SUNION[`SUNION`]
 |
-* `SMOVE`
-* `SDIFFSTORE`
-* `SINTERSTORE`
-* `SUNIONSTORE`
+* {redisio}SMOVE[`SMOVE`]
+* {redisio}SDIFFSTORE[`SDIFFSTORE`]
+* {redisio}SINTERSTORE[`SINTERSTORE`]
+* {redisio}SUNIONSTORE[`SUNIONSTORE`]
 |===
 
 == ZSets (sorted sets)
@@ -537,43 +537,43 @@ node [shape=plaintext]
 [cols="33a,33a,33a"]
 |===
 |
-* `BZMPOP`
-* `BZPOPMAX`
-* `BZPOPMIN`
-* `ZADD`
-* `ZCARD`
-* `ZCOUNT`
-* `ZDIFF`
-* `ZDIFFSTORE`
-* `ZINCRBY`
-* `ZINTER`
-* `ZINTERCARD`
+* {redisio}BZMPOP[`BZMPOP`]
+* {redisio}BZPOPMAX[`BZPOPMAX`]
+* {redisio}BZPOPMIN[`BZPOPMIN`]
+* {redisio}ZADD[`ZADD`]
+* {redisio}ZCARD[`ZCARD`]
+* {redisio}ZCOUNT[`ZCOUNT`]
+* {redisio}ZDIFF[`ZDIFF`]
+* {redisio}ZDIFFSTORE[`ZDIFFSTORE`]
+* {redisio}ZINCRBY[`ZINCRBY`]
+* {redisio}ZINTER[`ZINTER`]
+* {redisio}ZINTERCARD[`ZINTERCARD`]
 |
-* `ZINTERSTORE`
-* `ZLEXCOUNT`
-* `ZMPOP`
-* `ZMSCORE`
-* `ZPOPMAX`
-* `ZPOPMIN`
-* `ZRANDMEMBER`
-* `ZRANGE`
-* `ZRANGEBYLEX`
-* `ZRANGEBYSCORE`
-* `ZRANGESTORE`
-* `ZRANK`
+* {redisio}ZINTERSTORE[`ZINTERSTORE`]
+* {redisio}ZLEXCOUNT[`ZLEXCOUNT`]
+* {redisio}ZMPOP[`ZMPOP`]
+* {redisio}ZMSCORE[`ZMSCORE`]
+* {redisio}ZPOPMAX[`ZPOPMAX`]
+* {redisio}ZPOPMIN[`ZPOPMIN`]
+* {redisio}ZRANDMEMBER[`ZRANDMEMBER`]
+* {redisio}ZRANGE[`ZRANGE`]
+* {redisio}ZRANGEBYLEX[`ZRANGEBYLEX`]
+* {redisio}ZRANGEBYSCORE[`ZRANGEBYSCORE`]
+* {redisio}ZRANGESTORE[`ZRANGESTORE`]
+* {redisio}ZRANK[`ZRANK`]
 |
-* `ZREM`
-* `ZREMRANGEBYLEX`
-* `ZREMRANGEBYRANK`
-* `ZREMRANGEBYSCORE`
-* `ZREVRANGE`
-* `ZREVRANGEBYLEX`
-* `ZREVRANGEBYSCORE`
-* `ZREVRANK`
-* `ZSCAN`
-* `ZSCORE`
-* `ZUNION`
-* `ZUNIONSTORE`
+* {redisio}ZREM[`ZREM`]
+* {redisio}ZREMRANGEBYLEX[`ZREMRANGEBYLEX`]
+* {redisio}ZREMRANGEBYRANK[`ZREMRANGEBYRANK`]
+* {redisio}ZREMRANGEBYSCORE[`ZREMRANGEBYSCORE`]
+* {redisio}ZREVRANGE[`ZREVRANGE`]
+* {redisio}ZREVRANGEBYLEX[`ZREVRANGEBYLEX`]
+* {redisio}ZREVRANGEBYSCORE[`ZREVRANGEBYSCORE`]
+* {redisio}ZREVRANK[`ZREVRANK`]
+* {redisio}ZSCAN[`ZSCAN`]
+* {redisio}ZSCORE[`ZSCORE`]
+* {redisio}ZUNION[`ZUNION`]
+* {redisio}ZUNIONSTORE[`ZUNIONSTORE`]
 |===
 
 == ZSets: Semaphore
@@ -636,12 +636,12 @@ else
 |Подписка по паттернам
 |Метаданные
 |
-* `PUBLISH`
-* `SUBSCRIBE`
-* `UNSUBSCRIBE`
+* {redisio}PUBLISH[`PUBLISH`]
+* {redisio}SUBSCRIBE[`SUBSCRIBE`]
+* {redisio}UNSUBSCRIBE[`UNSUBSCRIBE`]
 |
-* `PSUBSCRIBE`
-* `PUNSUBSCRIBE`
+* {redisio}PSUBSCRIBE[`PSUBSCRIBE`]
+* {redisio}PUNSUBSCRIBE[`PUNSUBSCRIBE`]
 |
 * `PUBSUB CHANNELS`
 * `PUBSUB NUMPAT`
@@ -660,11 +660,11 @@ image::streams-2.png[]
 
 Подсчёт уникальных значений без сохранения самих значений
 
-* `PFADD`
-* `PFCOUNT`
-* `PFMERGE`
+* {redisio}PFADD[`PFADD`]
+* {redisio}PFCOUNT[`PFCOUNT`]
+* {redisio}PFMERGE[`PFMERGE`]
 
-(можно передавать между системами через `DUMP` / `RESTORE`)
+(можно передавать между системами через {redisio}DUMP[`DUMP`] / {redisio}RESTORE[`RESTORE`])
 
 == Geo
 
@@ -675,14 +675,14 @@ image::streams-2.png[]
 |
 image::earth_model.svg[]
 |
-* `GEOADD`
-* `GEODIST`
-* `GEOHASH`
-* `GEOPOS`
-* `GEORADIUS`
-* `GEORADIUSBYMEMBER`
-* `GEOSEARCH`
-* `GEOSEARCHSTORE`
+* {redisio}GEOADD[`GEOADD`]
+* {redisio}GEODIST[`GEODIST`]
+* {redisio}GEOHASH[`GEOHASH`]
+* {redisio}GEOPOS[`GEOPOS`]
+* {redisio}GEORADIUS[`GEORADIUS`]
+* {redisio}GEORADIUSBYMEMBER[`GEORADIUSBYMEMBER`]
+* {redisio}GEOSEARCH[`GEOSEARCH`]
+* {redisio}GEOSEARCHSTORE[`GEOSEARCHSTORE`]
 |===
 
 == Geo
@@ -706,10 +706,10 @@ redis>  GEORADIUS Sicily 15 37 200 km
 
 == Скриптование на Lua
 
-* `EVAL`
+* {redisio}EVAL[`EVAL`]
 * `SCRIPT LOAD`
 * `SCRIPT EXISTS`
-* `EVALSHA`
+* {redisio}EVALSHA[`EVALSHA`]
 
 == Скриптование на Lua: примеры
 
@@ -734,9 +734,9 @@ EVALSHA 2fa2b029f72572e803ff55a09b1282699aecae6a 0
 | Отмена выполнения
 |
 
-* `MULTI`
-* `EXEC`
-* `DISCARD`
+* {redisio}MULTI[`MULTI`]
+* {redisio}EXEC[`EXEC`]
+* {redisio}DISCARD[`DISCARD`]
 
 |
 [source]
@@ -775,8 +775,8 @@ OK
 | Пример
 |
 
-* `WATCH`
-* `UNWATCH`
+* {redisio}WATCH[`WATCH`]
+* {redisio}UNWATCH[`UNWATCH`]
 |
 [source]
 ----
@@ -803,7 +803,7 @@ else
 ----
 
 [.fragment]
-Между вызовами `EXISTS` и `SET` кто-то мог захватить блокировку.
+Между вызовами {redisio}EXISTS[`EXISTS`] и {redisio}SET[`SET`] кто-то мог захватить блокировку.
 
 == Lock: захват блокировки
 
@@ -857,7 +857,7 @@ if GET lockname == my_id
 ----
 
 [.fragment]
-Перехват по таймауту мог произойти между вызовами `GET` и `DEL`.
+Перехват по таймауту мог произойти между вызовами {redisio}GET[`GET`] и {redisio}DEL[`DEL`].
 
 
 == Lock: отпускание блокировки
