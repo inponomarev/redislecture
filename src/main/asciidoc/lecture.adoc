@@ -191,10 +191,10 @@ digraph G {
 * {redisio}SETRANGE[`SETRANGE`]
 * {redisio}GETRANGE[`GETRANGE`]
 * {redisio}STRLEN[`STRLEN`]
-* `STRALGO LCS [KEYS\|STRINGS]`
+* {redisio}stralgo[`STRALGO LCS [KEYS\|STRINGS]`]
 |
-* {redisio}INCR[`INCR`]/{redisio}DECR[`DECR`]
-* {redisio}INCRBY[`INCRBY`]/{redisio}DECRBY[`DECRBY`]
+* {redisio}INCR[`INCR`] / {redisio}DECR[`DECR`]
+* {redisio}INCRBY[`INCRBY`] / {redisio}DECRBY[`DECRBY`]
 * {redisio}INCRBYFLOAT[`INCRBYFLOAT`]
 |===
 
@@ -209,7 +209,7 @@ digraph G {
 * {redisio}GETSET[`GETSET`]
 * {redisio}SETNX[`SETNX`]
 * {redisio}RENAMENX[`RENAMENX`]
-* `SET key value [NX\|XX] [GET]`
+* {redisio}set[`SET key value [NX\|XX\] [GET\]`]
 | 
 * {redisio}MGET[`MGET`]
 * {redisio}MSET[`MSET`]
