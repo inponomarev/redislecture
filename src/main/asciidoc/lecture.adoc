@@ -22,7 +22,7 @@ include::_doc_general_attributes.adoc[]
 :revealjs_width: 1600
 :revealjs_height: 900
 :stem: latexmath
-:redisio: https://redis.io/commands/
+:redisio: https://redis.io/docs/latest/commands/
 
 //== Часть 1. Введение
 :!figure-caption:
@@ -36,20 +36,34 @@ image::logo.svg[]
 * **Re**mote **Di**ctionary **S**erver
 * In-memory key–value database
 * Different kinds of abstract data structure
-* #1 KV Store by popularity (according to https://db-engines.com/en/ranking/key-value+store[DB-Engines rankings])
+
+
+[%notitle]
+== Популярность
+image::overall.png[]
+
+https://db-engines.com/en/ranking
+
 
 [%notitle]
 == Популярность
 image::popularity.png[]
 
+https://db-engines.com/en/ranking/key-value+store
+
+== Масштаб пользователей
+
+Twitter, AirBnB, Tinder, Yahoo, Adobe, Hulu, Amazon...
+
+(https://en.wikipedia.org/wiki/Redis#Users)
 
 == История
 
 * 2009 год: Salvatore Sanfilippo aka antirez
-* TCL -> C
+* Tcl -> C (но тесты написаны на Tcl)
 * 2015: Redis Labs
-* June 2020: Salvatore Sanfilippo stepped down as Redis maintainer
-* Популярность огромна
+* Июнь 2020: Salvatore Sanfilippo перестал быть мейнтейнером
+* Март 2024: проприетарная лицензия, форк Valkey
 
 
 == Для чего используют?
@@ -59,6 +73,7 @@ image::popularity.png[]
 * Для сравнения: Default Max Connections
 ** PostgreSQL: 100
 **  Redis: 10000
+
 
 == За счёт чего работает так быстро?
 
@@ -82,12 +97,47 @@ image::popularity.png[]
 
 * Простота освоения / концептуальная простота
 * Производительность
-* Очень богатая функциональность! (почти что база данных)
+* Очень богатая функциональность: caches, queues, atomic counters, distributed locks, semaphores, Bloom filters, etc etc etc
+* Почти что база данных!
+
+image::sak.jpg[{image-20-width}]
+
+
+== База данных ли это? Размер проекта
+
+* Написан на C (173 KLOC of C code as of Apr 2024 + 46 KLOC Tcl/Tk)
+
+[gnuplot,loc,png]
+....
+set terminal png size 1000, 550  font "Helvetica,20"
+
+$Data <<EOD
+PostgreSQL   902,848
+Redis        173,436
+EOD
+
+set title "Code size comparison"
+set ylabel "1000s of lines of code (KLOC)"
+set style data histogram
+set style histogram cluster gap 1
+set style fill solid border -1
+set boxwidth 0.9
+#set xtics rotate by -45
+set yrange [0:*]
+plot $Data using 2:xticlabels(1) with histogram title ""
+....
+
+
+== ACID
+
+image::acid.png[]
+
+
 
 == Redis и ACID
 
 * *Atomicity:*
-** Есть много атомарных операций ({redisio}GETSET[`GETSET`], {redisio}SETNX[`SETNX`] и т. п.)
+** Есть много атомарных операций ({redisio}getset[`GETSET`], {redisio}setnx[`SETNX`] и т. п.)
 ** Есть транзакции записи, выполняемые "одним куском" (но rollback-а в середине нет, поэтому если ошибка, то ¯\\_(ツ)_/¯)
 
 == Redis и ACID
@@ -113,6 +163,7 @@ image::popularity.png[]
 
 == Как попробовать?
 
+
 * Локально в докере
 
 ** `docker run --name some-redis -d redis`
@@ -123,9 +174,12 @@ image::popularity.png[]
 
 ** https://try.redis.io/
 
+* Linux: `sudo snap install redis`
+* Windows: *не работает в принципе*
+
 == Логическая структура: базы данных и ключи
 
-* База данных выбирается командой {redisio}SELECT[`SELECT`]
+* База данных выбирается командой {redisio}select[`SELECT`]
 * Независимые пространства имён ключей
 
 [graphviz]
@@ -152,10 +206,10 @@ digraph G {
 
 == Операции над базой данных
 
-* {redisio}FLUSHDB[`FLUSHDB`]
-* {redisio}FLUSHALL[`FLUSHALL`]
-* {redisio}KEYS[`KEYS pattern`]
-* {redisio}RANDOMKEY[`RANDOMKEY`]
+* {redisio}flushdb[`FLUSHDB`]
+* {redisio}flushall[`FLUSHALL`]
+* {redisio}keys[`KEYS pattern`]
+* {redisio}randomkey[`RANDOMKEY`]
 
 == Скалярные значения
 
@@ -180,22 +234,22 @@ digraph G {
 | Строки
 | Числа
 |
-* {redisio}SET[`SET`]
-* {redisio}GET[`GET`]
-* {redisio}DEL[`DEL`]
-* {redisio}COPY[`COPY`]
-* {redisio}RENAME[`RENAME`]
-* {redisio}EXISTS[`EXISTS`]
+* {redisio}set[`SET`]
+* {redisio}get[`GET`]
+* {redisio}del[`DEL`]
+* {redisio}copy[`COPY`]
+* {redisio}rename[`RENAME`]
+* {redisio}exists[`EXISTS`]
 |
-* {redisio}APPEND[`APPEND`]
-* {redisio}SETRANGE[`SETRANGE`]
-* {redisio}GETRANGE[`GETRANGE`]
-* {redisio}STRLEN[`STRLEN`]
+* {redisio}append[`APPEND`]
+* {redisio}setrange[`SETRANGE`]
+* {redisio}getrange[`GETRANGE`]
+* {redisio}strlen[`STRLEN`]
 * {redisio}stralgo[`STRALGO LCS [KEYS\|STRINGS]`]
 |
-* {redisio}INCR[`INCR`] / {redisio}DECR[`DECR`]
-* {redisio}INCRBY[`INCRBY`] / {redisio}DECRBY[`DECRBY`]
-* {redisio}INCRBYFLOAT[`INCRBYFLOAT`]
+* {redisio}incr[`INCR`] / {redisio}decr[`DECR`]
+* {redisio}incrby[`INCRBY`] / {redisio}decrby[`DECRBY`]
+* {redisio}incrbyfloat[`INCRBYFLOAT`]
 |===
 
 == Комбинированные атомарные операции
@@ -205,16 +259,23 @@ digraph G {
 | Комбинированные 
 | Мультиоперации
 |
-* {redisio}GETDEL[`GETDEL`]
-* {redisio}GETSET[`GETSET`]
-* {redisio}SETNX[`SETNX`]
-* {redisio}RENAMENX[`RENAMENX`]
+* {redisio}getdel[`GETDEL`]
+* {redisio}getset[`GETSET`]
+* {redisio}setnx[`SETNX`]
+* {redisio}renamenx[`RENAMENX`]
 * {redisio}set[`SET key value [NX\|XX\] [GET\]`]
 | 
-* {redisio}MGET[`MGET`]
-* {redisio}MSET[`MSET`]
-* {redisio}MSETNX[`MSETNX`]
+* {redisio}mget[`MGET`]
+* {redisio}mset[`MSET`]
+* {redisio}msetnx[`MSETNX`]
 |===
+
+== CAS-операции на одном ключе нет
+
+image::nocas.png[]
+
+...но вообще механизм "оптимистичной блокировки есть" на базе `WATCH`..`MULTI`..`EXEC`, о чем речь пойдёт далее
+
 
 == Keys Expiration
 
@@ -224,15 +285,15 @@ digraph G {
 | Узнать
 | Сбросить
 |
-* {redisio}EXPIRE[`EXPIRE`] / {redisio}PEXPIRE[`PEXPIRE`]
-* {redisio}EXPIREAT[`EXPIREAT`] / {redisio}PEXPIREAT[`PEXPIREAT`]
-* {redisio}SETEX[`SETEX`] / {redisio}PSETEX[`PSETEX`]
-* {redisio}GETEX[`GETEX`] / {redisio}PGETEX[`PGETEX`]
+* {redisio}expire[`EXPIRE`] / {redisio}pexpire[`PEXPIRE`]
+* {redisio}expireat[`EXPIREAT`] / {redisio}pexpireat[`PEXPIREAT`]
+* {redisio}setex[`SETEX`] / {redisio}psetex[`PSETEX`]
+* {redisio}getex[`GETEX`] / {redisio}pgetex[`PGETEX`]
 |
-* {redisio}TTL[`TTL`] / {redisio}PTTL[`PTTL`]
-* {redisio}EXPIRETIME[`EXPIRETIME`] / {redisio}PEXPIRETIME[`PEXPIRETIME`]
+* {redisio}ttl[`TTL`] / {redisio}pttl[`PTTL`]
+* {redisio}expiretime[`EXPIRETIME`] / {redisio}pexpiretime[`PEXPIRETIME`]
 | 
-* {redisio}PERSIST[`PERSIST`]
+* {redisio}persist[`PERSIST`]
 |===
 
 == Как работает expiration
@@ -258,7 +319,7 @@ IF current != NULL AND current > 10 THEN
 ELSE
     value = INCR(ip)
     IF value == 1 THEN
-        EXPIRE(ip,1) //<---PROBLEM!!
+        EXPIRE(ip,1) //<---если не выполним, будет плохо!
     END
     PERFORM_API_CALL()
 END
@@ -266,7 +327,7 @@ END
 
 == Пример: Rate Limiter
 
-Используя {redisio}EVAL[`EVAL`], запускать атомарный Lua-скрипт на втором шаге:
+Используя {redisio}eval[`EVAL`], запускать атомарный Lua-скрипт на втором шаге:
 
 [source,lua]
 ----
@@ -281,10 +342,10 @@ end
 [cols="20a,80a"]
 |===
 |
-* {redisio}SETBIT[`SETBIT`]
-* {redisio}GETIT[`GETIT`]
-* {redisio}BITOP[`BITOP`]
-* {redisio}BITCOUNT[`BITCOUNT`]
+* {redisio}setbit[`SETBIT`]
+* {redisio}getit[`GETIT`]
+* {redisio}bitop[`BITOP`]
+* {redisio}bitcount[`BITCOUNT`]
 |
 
 [graphviz]
@@ -308,6 +369,16 @@ digraph G {
 
 image::bloom_filter.svg[{image-100-width}]
 
+
+== HyperLogLog
+
+Подсчёт уникальных значений без сохранения самих значений
+
+* {redisio}pfadd[`PFADD`]
+* {redisio}pfcount[`PFCOUNT`]
+* {redisio}pfmerge[`PFMERGE`]
+
+(можно передавать между системами через {redisio}dump[`DUMP`] / {redisio}restore[`RESTORE`])
 
 == Hash fields
 
@@ -344,23 +415,23 @@ node [shape=plaintext]
 }
 --
 |
-* {redisio}HSET[`HSET`]
-* {redisio}HGET[`HGET`]
-* {redisio}HDEL[`HDEL`]
-* {redisio}HEXISTS[`HEXISTS`]
-* {redisio}HINCRBY[`HINCRBY`]
-* {redisio}HINCRBYFLOAT[`HINCRBYFLOAT`]
-* {redisio}HLEN[`HLEN`]
-* {redisio}HRANDFIELD[`HRANDFIELD`]
+* {redisio}hset[`HSET`]
+* {redisio}hget[`HGET`]
+* {redisio}hdel[`HDEL`]
+* {redisio}hexists[`HEXISTS`]
+* {redisio}hincrby[`HINCRBY`]
+* {redisio}hincrbyfloat[`HINCRBYFLOAT`]
+* {redisio}hlen[`HLEN`]
+* {redisio}hrandfield[`HRANDFIELD`]
 
 |
-* {redisio}HMGET[`HMGET`] 
-* {redisio}HMSET[`HMSET`]
-* {redisio}HKEYS[`HKEYS`] 
-* {redisio}HVALS[`HVALS`]
-* {redisio}HGETALL[`HGETALL`] 
-* {redisio}HSETNX[`HSETNX`]
-* {redisio}HSTRLEN[`HSTRLEN`]
+* {redisio}hmget[`HMGET`] 
+* {redisio}hmset[`HMSET`]
+* {redisio}hkeys[`HKEYS`] 
+* {redisio}hvals[`HVALS`]
+* {redisio}hgetall[`HGETALL`] 
+* {redisio}hsetnx[`HSETNX`]
+* {redisio}hstrlen[`HSTRLEN`]
 |===
 NB: expiration работает только на уровне структуры целиком, а не её отдельных ключей.
 
@@ -392,30 +463,30 @@ digraph G {
 | O(N) (N - длина списка)
 | O(1)
 |
-* {redisio}LINDEX[`LINDEX`]
-* {redisio}LRANGE[`LRANGE`] (весь список: `LRANGE my_list 0 -1`)
-* {redisio}LINSERT[`LINSERT`] 
-* {redisio}LPOS[`LPOS`]
-* {redisio}LREM[`LREM`]
-* {redisio}LSET[`LSET`]
-* {redisio}LTRIM[`LTRIM`]
+* {redisio}lindex[`LINDEX`]
+* {redisio}lrange[`LRANGE`] (весь список: `LRANGE my_list 0 -1`)
+* {redisio}linsert[`LINSERT`] 
+* {redisio}lpos[`LPOS`]
+* {redisio}lrem[`LREM`]
+* {redisio}lset[`LSET`]
+* {redisio}ltrim[`LTRIM`]
 |
-* {redisio}LLEN[`LLEN`]
-* {redisio}LPOP[`LPOP`] / {redisio}RPOP[`RPOP`] 
-* {redisio}LPUSH[`LPUSH`] / {redisio}RPUSH[`RPUSH`] 
-* {redisio}LPUSHX[`LPUSHX`] / {redisio}RPUSHX[`RPUSHX`] 
-* {redisio}LMOVE[`LMOVE`] (перемещение между разными списками)
+* {redisio}llen[`LLEN`]
+* {redisio}lpop[`LPOP`] / {redisio}rpop[`RPOP`] 
+* {redisio}lpush[`LPUSH`] / {redisio}rpush[`RPUSH`] 
+* {redisio}lpushx[`LPUSHX`] / {redisio}rpushx[`RPUSHX`] 
+* {redisio}lmove[`LMOVE`] (перемещение между разными списками)
 |===
 
 == Блокирующие очереди
 
-* {redisio}BLPOP[`BLPOP`] / {redisio}BRPOP[`BRPOP`]
-* {redisio}BRPOPLPUSH[`BRPOPLPUSH`] (deprecated в пользу {redisio}BLMOVE[`BLMOVE`])
-* {redisio}BLMOVE[`BLMOVE`]
+* {redisio}blpop[`BLPOP`] / {redisio}brpop[`BRPOP`]
+* {redisio}brpoplpush[`BRPOPLPUSH`] (deprecated в пользу {redisio}blmove[`BLMOVE`])
+* {redisio}blmove[`BLMOVE`]
 
 == Надёжная очередь
 
-{redisio}BLPOPRPUSH[`BLPOPRPUSH`] или {redisio}BLMOVE[`BLMOVE`]
+{redisio}blpoprpush[`BLPOPRPUSH`] или {redisio}blmove[`BLMOVE`]
 
 [graphviz]
 --
@@ -458,6 +529,8 @@ digraph G {
 }
 --
 
+* В отличие от `BLPOP`, элемент не пропадает из Redis, и в случае, если слишком долго висит "in process", его можно повторно пытаться обработать.
+
 == Sets
 
 [cols="25a,25a,25a,25a"]
@@ -468,24 +541,24 @@ digraph G {
 |Множества
 |Перемещение между множествами
 |
-* {redisio}SADD[`SADD`]
-* {redisio}SREM[`SREM`]
-* {redisio}SCARD[`SCARD`]
-* {redisio}SMEMBERS[`SMEMBERS`]
-* {redisio}SMISMEMBER[`SMISMEMBER`]
+* {redisio}sadd[`SADD`]
+* {redisio}srem[`SREM`]
+* {redisio}scard[`SCARD`]
+* {redisio}smembers[`SMEMBERS`]
+* {redisio}smismember[`SMISMEMBER`]
 |
-* {redisio}SPOP[`SPOP`]
-* {redisio}SRANDMEMBER[`SRANDMEMBER`]
+* {redisio}spop[`SPOP`]
+* {redisio}srandmember[`SRANDMEMBER`]
 |
-* {redisio}SDIFF[`SDIFF`]
-* {redisio}SINTER[`SINTER`]
-* {redisio}SINTERCARD[`SINTERCARD`]
-* {redisio}SUNION[`SUNION`]
+* {redisio}sdiff[`SDIFF`]
+* {redisio}sinter[`SINTER`]
+* {redisio}sintercard[`SINTERCARD`]
+* {redisio}sunion[`SUNION`]
 |
-* {redisio}SMOVE[`SMOVE`]
-* {redisio}SDIFFSTORE[`SDIFFSTORE`]
-* {redisio}SINTERSTORE[`SINTERSTORE`]
-* {redisio}SUNIONSTORE[`SUNIONSTORE`]
+* {redisio}smove[`SMOVE`]
+* {redisio}sdiffstore[`SDIFFSTORE`]
+* {redisio}sinterstore[`SINTERSTORE`]
+* {redisio}sunionstore[`SUNIONSTORE`]
 |===
 
 == ZSets (sorted sets)
@@ -538,46 +611,48 @@ node [shape=plaintext]
 [cols="33a,33a,33a"]
 |===
 |
-* {redisio}BZMPOP[`BZMPOP`]
-* {redisio}BZPOPMAX[`BZPOPMAX`]
-* {redisio}BZPOPMIN[`BZPOPMIN`]
-* {redisio}ZADD[`ZADD`]
-* {redisio}ZCARD[`ZCARD`]
-* {redisio}ZCOUNT[`ZCOUNT`]
-* {redisio}ZDIFF[`ZDIFF`]
-* {redisio}ZDIFFSTORE[`ZDIFFSTORE`]
-* {redisio}ZINCRBY[`ZINCRBY`]
-* {redisio}ZINTER[`ZINTER`]
-* {redisio}ZINTERCARD[`ZINTERCARD`]
+* {redisio}bzmpop[`BZMPOP`]
+* {redisio}bzpopmax[`BZPOPMAX`]
+* {redisio}bzpopmin[`BZPOPMIN`]
+* {redisio}zadd[`ZADD`]
+* {redisio}zcard[`ZCARD`]
+* {redisio}zcount[`ZCOUNT`]
+* {redisio}zdiff[`ZDIFF`]
+* {redisio}zdiffstore[`ZDIFFSTORE`]
+* {redisio}zincrby[`ZINCRBY`]
+* {redisio}zinter[`ZINTER`]
+* {redisio}zintercard[`ZINTERCARD`]
 |
-* {redisio}ZINTERSTORE[`ZINTERSTORE`]
-* {redisio}ZLEXCOUNT[`ZLEXCOUNT`]
-* {redisio}ZMPOP[`ZMPOP`]
-* {redisio}ZMSCORE[`ZMSCORE`]
-* {redisio}ZPOPMAX[`ZPOPMAX`]
-* {redisio}ZPOPMIN[`ZPOPMIN`]
-* {redisio}ZRANDMEMBER[`ZRANDMEMBER`]
-* {redisio}ZRANGE[`ZRANGE`]
-* {redisio}ZRANGEBYLEX[`ZRANGEBYLEX`]
-* {redisio}ZRANGEBYSCORE[`ZRANGEBYSCORE`]
-* {redisio}ZRANGESTORE[`ZRANGESTORE`]
-* {redisio}ZRANK[`ZRANK`]
+* {redisio}zinterstore[`ZINTERSTORE`]
+* {redisio}zlexcount[`ZLEXCOUNT`]
+* {redisio}zmpop[`ZMPOP`]
+* {redisio}zmscore[`ZMSCORE`]
+* {redisio}zpopmax[`ZPOPMAX`]
+* {redisio}zpopmin[`ZPOPMIN`]
+* {redisio}zrandmember[`ZRANDMEMBER`]
+* {redisio}zrange[`ZRANGE`]
+* {redisio}zrangebylex[`ZRANGEBYLEX`]
+* {redisio}zrangebyscore[`ZRANGEBYSCORE`]
+* {redisio}zrangestore[`ZRANGESTORE`]
+* {redisio}zrank[`ZRANK`]
 |
-* {redisio}ZREM[`ZREM`]
-* {redisio}ZREMRANGEBYLEX[`ZREMRANGEBYLEX`]
-* {redisio}ZREMRANGEBYRANK[`ZREMRANGEBYRANK`]
-* {redisio}ZREMRANGEBYSCORE[`ZREMRANGEBYSCORE`]
-* {redisio}ZREVRANGE[`ZREVRANGE`]
-* {redisio}ZREVRANGEBYLEX[`ZREVRANGEBYLEX`]
-* {redisio}ZREVRANGEBYSCORE[`ZREVRANGEBYSCORE`]
-* {redisio}ZREVRANK[`ZREVRANK`]
-* {redisio}ZSCAN[`ZSCAN`]
-* {redisio}ZSCORE[`ZSCORE`]
-* {redisio}ZUNION[`ZUNION`]
-* {redisio}ZUNIONSTORE[`ZUNIONSTORE`]
+* {redisio}zrem[`ZREM`]
+* {redisio}zremrangebylex[`ZREMRANGEBYLEX`]
+* {redisio}zremrangebyrank[`ZREMRANGEBYRANK`]
+* {redisio}zremrangebyscore[`ZREMRANGEBYSCORE`]
+* {redisio}zrevrange[`ZREVRANGE`]
+* {redisio}zrevrangebylex[`ZREVRANGEBYLEX`]
+* {redisio}zrevrangebyscore[`ZREVRANGEBYSCORE`]
+* {redisio}zrevrank[`ZREVRANK`]
+* {redisio}zscan[`ZSCAN`]
+* {redisio}zscore[`ZSCORE`]
+* {redisio}zunion[`ZUNION`]
+* {redisio}zunionstore[`ZUNIONSTORE`]
 |===
 
 == ZSets: Semaphore
+
+Ограничитель числа параллельно выполяющихся процессов
 
 [graphviz]
 --
@@ -637,35 +712,48 @@ else
 |Подписка по паттернам
 |Метаданные
 |
-* {redisio}PUBLISH[`PUBLISH`]
-* {redisio}SUBSCRIBE[`SUBSCRIBE`]
-* {redisio}UNSUBSCRIBE[`UNSUBSCRIBE`]
+* {redisio}publish[`PUBLISH`]
+* {redisio}subscribe[`SUBSCRIBE`]
+* {redisio}unsubscribe[`UNSUBSCRIBE`]
 |
-* {redisio}PSUBSCRIBE[`PSUBSCRIBE`]
-* {redisio}PUNSUBSCRIBE[`PUNSUBSCRIBE`]
+* {redisio}psubscribe[`PSUBSCRIBE`]
+* {redisio}punsubscribe[`PUNSUBSCRIBE`]
 |
 * `PUBSUB CHANNELS`
 * `PUBSUB NUMPAT`
 * `PUBSUB NUMSUB`
 |===
 
-== Streams (почти Kafka)
+== Keyspace notifications
+
+https://redis.io/docs/latest/develop/use/keyspace-notifications/
+
+[source]
+----
+config set notify-keyspace-events KEA
+psubscribe '*'
+----
+
+== Как перехватывать все команды
+
+* {redisio}monitor[`MONITOR`]
+
+Бывает необходима, чтобы посмотреть, что происходит на сервере и оптимизировать поступающие команды
+
+== Streams
 
 .https://redis.com/redis-enterprise/data-structures/
 image::streams-2.png[]
 
 
+== Streams
+* {redisio}xadd[`XADD`] добавляет новую запись в поток.
+* {redisio}xread[`XREAD`] считывает одну или несколько записей, начиная с заданной позиции и продвигаясь вперед во времени.
+* {redisio}xrange[`XRANGE`] возвращает диапазон записей между двумя предоставленными идентификаторами записей.
+* {redisio}xlen[`XLEN`] возвращает длину стрима.
+
 Описание: https://redis.io/topics/streams-intro
 
-== HyperLogLog
-
-Подсчёт уникальных значений без сохранения самих значений
-
-* {redisio}PFADD[`PFADD`]
-* {redisio}PFCOUNT[`PFCOUNT`]
-* {redisio}PFMERGE[`PFMERGE`]
-
-(можно передавать между системами через {redisio}DUMP[`DUMP`] / {redisio}RESTORE[`RESTORE`])
 
 == Geo
 
@@ -676,14 +764,14 @@ image::streams-2.png[]
 |
 image::earth_model.svg[]
 |
-* {redisio}GEOADD[`GEOADD`]
-* {redisio}GEODIST[`GEODIST`]
-* {redisio}GEOHASH[`GEOHASH`]
-* {redisio}GEOPOS[`GEOPOS`]
-* {redisio}GEORADIUS[`GEORADIUS`]
-* {redisio}GEORADIUSBYMEMBER[`GEORADIUSBYMEMBER`]
-* {redisio}GEOSEARCH[`GEOSEARCH`]
-* {redisio}GEOSEARCHSTORE[`GEOSEARCHSTORE`]
+* {redisio}geoadd[`GEOADD`]
+* {redisio}geodist[`GEODIST`]
+* {redisio}geohash[`GEOHASH`]
+* {redisio}geopos[`GEOPOS`]
+* {redisio}georadius[`GEORADIUS`]
+* {redisio}georadiusbymember[`GEORADIUSBYMEMBER`]
+* {redisio}geosearch[`GEOSEARCH`]
+* {redisio}geosearchstore[`GEOSEARCHSTORE`]
 |===
 
 == Geo
@@ -707,10 +795,10 @@ redis>  GEORADIUS Sicily 15 37 200 km
 
 == Скриптование на Lua
 
-* {redisio}EVAL[`EVAL`]
+* {redisio}eval[`EVAL`]
 * `SCRIPT LOAD`
 * `SCRIPT EXISTS`
-* {redisio}EVALSHA[`EVALSHA`]
+* {redisio}evalsha[`EVALSHA`]
 
 == Скриптование на Lua: примеры
 
@@ -735,9 +823,9 @@ EVALSHA 2fa2b029f72572e803ff55a09b1282699aecae6a 0
 | Отмена выполнения
 |
 
-* {redisio}MULTI[`MULTI`]
-* {redisio}EXEC[`EXEC`]
-* {redisio}DISCARD[`DISCARD`]
+* {redisio}multi[`MULTI`]
+* {redisio}exec[`EXEC`]
+* {redisio}discard[`DISCARD`]
 
 |
 [source]
@@ -776,8 +864,8 @@ OK
 | Пример
 |
 
-* {redisio}WATCH[`WATCH`]
-* {redisio}UNWATCH[`UNWATCH`]
+* {redisio}watch[`WATCH`]
+* {redisio}unwatch[`UNWATCH`]
 |
 [source]
 ----
@@ -804,7 +892,7 @@ else
 ----
 
 [.fragment]
-Между вызовами {redisio}EXISTS[`EXISTS`] и {redisio}SET[`SET`] кто-то мог захватить блокировку.
+Между вызовами {redisio}exists[`EXISTS`] и {redisio}set[`SET`] кто-то мог захватить блокировку.
 
 == Lock: захват блокировки
 
@@ -858,7 +946,7 @@ if GET lockname == my_id
 ----
 
 [.fragment]
-Перехват по таймауту мог произойти между вызовами {redisio}GET[`GET`] и {redisio}DEL[`DEL`].
+Перехват по таймауту мог произойти между вызовами {redisio}get[`GET`] и {redisio}del[`del`].
 
 
 == Lock: отпускание блокировки
@@ -879,6 +967,241 @@ return 'someone acquired our lock while we were busy...'
 
 (В действительности, это можно провернуть в Lua-скрипте простым if-ом без `WATCH/MULTI/EXEC`)
 
+== Библиотеки для Redis Connectivity
+
+* Существуют для всех основных языков и платформ (C#/.NET, Go, Java, Node.js, Python)
+
+
+* https://redis.io/docs/latest/develop/connect/
+
+
+== Redis и Java
+
+* Jedis -- для синхронного доступа
+* Lettuce -- для асинхронного доступа / реактивных приложений
+* Redisson -- для типо-безопасной, объектно-ориентированной работы, обладает большим количетвом собственных "строительных блоков", поддерживает как синхронные, так и асинхронные API
+
+== Возможности Redisson
+
+* `AtomicLong`/`AtomicDouble` -- ведут себя как Java atomics, но только в распределённой среде
+* `BitSet`, `BloomFilter`, `HyperLogLog`
+* `Topic`
+
+== `ObjectHolder`: типовая безопасность
+[source,java]
+----
+RBucket<AnyObject> bucket = redisson.getBucket("anyObject");
+
+bucket.set(new AnyObject(1));
+AnyObject obj = bucket.get();
+
+bucket.trySet(new AnyObject(3));
+bucket.compareAndSet(new AnyObject(4), new AnyObject(5));
+bucket.getAndSet(new AnyObject(6));
+----
+
+"Под капотом" Redisson сериализует объект в строку, также используется Lua-скриптинг
+
+== Map
+
+[source,java]
+
+----
+RMap<String, SomeObject> map = redisson.getMap("anyMap");
+SomeObject prevObject = map.put("123", new SomeObject());
+SomeObject currentObject = map.putIfAbsent("323", new SomeObject());
+SomeObject obj = map.remove("123");
+
+----
+
+== Redisson: распределенные блокировки и синхронизаторы
+
+* Lock
+* Fair Lock
+* MultiLock
+* RedLock
+* ReadWriteLock
+* Semaphore
+* PermitExpirableSemaphore
+* CountDownLatch
+* Spin Lock
+* Fenced Lock
+
+
+== Как тестируют приложения с Redis?
+
+Testcontainers, of course!
+
+image::testcontainers_transparent.png[{image-30-width}]
+
+(На самом деле, Redis является одним из самых первых примеров для Testcontainers)
+
+== Зачем мок, если есть Testcontainers?
+
+* Still, Testcontainers require Docker and some time to download and run the container. Jedis-Mock requires Java.
+* Sometimes we want to manage the reply:
+** imitate a system or network failure
+** give a deterministic answer for non-deterministic query
+
+== Зачем мок, если есть Testcontainers?
+
+* Иногда нужен "прозрачный ящик" для тестирования, т. е. проверка запросов и подмена ответов
+
+[plantuml]
+----
+@startuml
+skinparam   dpi 220
+hide footbox
+Caller -> JedisMock: Request
+JedisMock -> JedisMock: Record & Verify
+JedisMock--> Caller : Response
+JedisMock--X Caller : Exception
+@enduml
+----
+
+== JedisMock history
+
+* 2017: Filipe Peliz Pinto Teixeira forked an abandoned POC repository.
+* 2019: I tried to use it in my project and soon gave up
+* 2021-now: actively developed by MIPT students under my supervision
+* 2023: I have full rights for maintaing & publishig new versions
+
+image::redis-maintainers.jpg[{image-40-width}]
+
+== JedisMock: кто использует?
+
+* Известные нам зависимости: Slack API client, dropwizard.io
+
+image::users.png[]
+
+== JedisMock: кто использует?
+
+* Стабильный приток новых багрепортов и запросов на доработку.
+* 150 звёзд на GitHub'е -- кстати, поставьте, пожалуйста, звезду!
+
+image::issues.png[]
+
+== JedisMock: идея
+
+[cols="^1a,^1a"]
+|===
+| image:sak.jpg[width=300]
+| image:sak.jpg[width=300]
+
+|*Redis data type*
+
+
+|*Java data type*
+|HMAP
+|HashMap
+|LIST
+|ArrayList
+|SET
+|HashSet
+|ZSET
+|TreeSet+HashMap
+|Bit operations
+|BitSet
+|===
+
+== JedisMock: networking&threading
+
+* `java.net.ServerSocket`
+* Каждый входящий клиент получает по треду из `CachedThreadPool`
+* Все треды синхронизируются по единственному lock-у перед внсением изменений
+* Блокирующие операции (такие как `BLPOP`) используют `wait`/`notify`
+
+
+== Как мы делаем его похожим на настоящий  Redis?
+
+* Redis: 237 команд различной популярности и важности  (принцип Парето 80/20 тут работает)
+* Jedis-mock: поддерживает 153 команды  (64% и это число растёт)
+
+[gnuplot,distr1,png]
+....
+set terminal png size 1000, 200  font "Helvetica,30"
+set boxwidth 0.5 relative
+set style fill solid 0.5
+
+set yrange [0:1]
+set xlabel "implemented vs not implemented"
+
+unset key
+unset xtics
+unset ytics
+f(x)=1
+
+set xrange [1:237]
+plot (x<=153?f(x):1/0) with boxes lc 2, (x>153?f(x):1/0) with boxes lc 7
+....
+
+
+== Как мы делаем его похожим на настоящий  Redis?
+
+* Redis: 237 команд различной популярности и важности  (принцип Парето 80/20 тут работает)
+* Jedis-mock: поддерживает 153 команды  (64% и это число растёт)
+
+[gnuplot,pareto,png]
+....
+set terminal png size 1000, 600  font "Helvetica,30"
+set boxwidth 0.5 relative
+set style fill solid 0.5
+
+set yrange [0:0.75]
+set xlabel "implemented vs not implemented"
+set ylabel "use cases"
+unset key
+unset xtics
+unset ytics
+f(x)=1/(x**0.6)
+
+set xrange [1:237]
+plot (x<=153?f(x):1/0) with boxes lc 2, (x>153?f(x):1/0) with boxes lc 7
+....
+
+== Как мы подсчитываем процент поддерживаемых команд?
+
+* Команда Redis `COMMAND` выводит список всех поддерживаемых команд (сейчас их 237, с каждой версией число увеличивается)
+* Классы, проаннотированные `@Command(<COMMAND_NAME>)` реализуют команды в Jedis-mock
+
+== Автоматически создаваемый fit-gap report
+
+image::supported_redis_operations.png[]
+
+== А как мы убеждаемся, что команды работают правильно?
+
+Comparison testing
+
+[source,java]
+----
+@TestTemplate
+public void whenHSettingOnTheSameKeys_EnsureReturnTypeIs1WhenKeysAreNew(Jedis jedis) {
+    assertEquals(1L, jedis.hset(HASH, FIELD_1, VALUE_1));
+    assertEquals(0L, jedis.hset(HASH, FIELD_1, VALUE_1));
+}
+----
+
+== А как мы убеждаемся, что команды работают правильно?
+
+Comparison testing
+
+image::comparison.png[{image-50-width}]
+
+
+== Собственные E2E тесты Redis
+
+* Написаны на Tcl/Tk
+
+[source,tcl]
+----
+test {INCR over 32bit value} {
+    r set novar 17179869184
+    r incr novar
+} {17179869185}  
+----
+
+Постепенно увеличиваем количество проходящих тестовых сценариев, проверяем hashsets, sets, zsets, lists, streams
+
 == Redis in Action
 
 [cols="30a,70a"]
@@ -887,6 +1210,6 @@ return 'someone acquired our lock while we were busy...'
 image::redis-in-action.png[]
 |
 * Josiah Carlson
-* 2013 (довольно старая)
+* 2013 (довольно старая, но идейно не устаревшая)
 * Доступна в электронном виде на redis.com
 |===

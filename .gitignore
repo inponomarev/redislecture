@@ -23,3 +23,7 @@ slides-short/
 /*.mp4
 /*.bat
 .asciidoctor
+/src/main/asciidoc/images/diag-*.png
+/src/main/asciidoc/images/loc.png
+/src/main/asciidoc/images/pareto.png
+/src/main/asciidoc/images/distr1.png
