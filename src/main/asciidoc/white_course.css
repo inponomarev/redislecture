@@ -259,7 +259,11 @@ body {
 .reveal table th.halign-center,
 .reveal table td.halign-center {
   text-align: center; }
-  
+.reveal table td.halign-left {
+  text-align: left; }
+.reveal table td.halign-right {
+  text-align: right; }
+
   
 .reveal table th[align="right"],
 .reveal table td[align="right"] {
@@ -494,4 +498,8 @@ body {
 
 section.title {
   height: 100%;
+}
+
+ul.none {
+  list-style: none;
 }

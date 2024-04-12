@@ -1027,14 +1027,52 @@ SomeObject obj = map.remove("123");
 * Spin Lock
 * Fenced Lock
 
-
 == Как тестируют приложения с Redis?
 
-Testcontainers, of course!
+[cols="40a,10a,50a"]
+|===
+>.^|
+*Моки*
+^.^|
+image::vs.svg[]
+<.^|
+*Testcontainers*
+|===
+
+== Testcontainers: запуск "настоящего" Redis для выполнения теста
 
 image::testcontainers_transparent.png[{image-30-width}]
 
-(На самом деле, Redis является одним из самых первых примеров для Testcontainers)
+
+Redis является одним из самых первых примеров для Testcontainers
+
+== Testcontainers
+
+[source,java]
+----
+@Testcontainers
+public class RedisBackedCacheIntTest {
+    private RedisBackedCache underTest;
+    @Container
+    public GenericContainer redis = new GenericContainer(DockerImageName.parse("redis:5.0.3-alpine"))
+        .withExposedPorts(6379);
+    @BeforeEach
+    public void setUp() {
+        String address = redis.getHost();
+        Integer port = redis.getFirstMappedPort();
+        // Now we have an address and port for Redis, no matter where it is running
+        underTest = new RedisBackedCache(address, port);
+    }
+    @Test
+    public void testSomething() { .... }
+}
+----
+
+== Моки Redis на разных языках
+
+* Python: https://github.com/cunla/fakeredis-py
+* NodeJS: https://github.com/yeahoffline/redis-mock
+* Java: https://github.com/fppt/jedis-mock
 
 == Зачем мок, если есть Testcontainers?
 
@@ -1052,12 +1090,13 @@ image::testcontainers_transparent.png[{image-30-width}]
 @startuml
 skinparam   dpi 220
 hide footbox
-Caller -> JedisMock: Request
-JedisMock -> JedisMock: Record & Verify
-JedisMock--> Caller : Response
-JedisMock--X Caller : Exception
+Caller -> Mock: Request
+Mock -> Mock: Record & Verify
+Mock--> Caller : Response
+Mock--X Caller : Exception
 @enduml
 ----
+
 
 == JedisMock history
 

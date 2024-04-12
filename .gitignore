@@ -27,3 +27,4 @@ slides-short/
 /src/main/asciidoc/images/loc.png
 /src/main/asciidoc/images/pareto.png
 /src/main/asciidoc/images/distr1.png
+*.bak
