@@ -1,10 +1,10 @@
 = Redis
 Иван Пономарев
-:revealjs_theme: black
+//:revealjs_theme: white
 :revealjs_customtheme: white_course.css
-:revealjs_slideNumber:
+:revealjs_slideNumber: true
 :revealjs_history:
-:revealjs_progress:
+:revealjs_progress: true
 :encoding: UTF-8
 :lang: ru
 include::_doc_general_attributes.adoc[]
@@ -23,7 +23,7 @@ include::_doc_general_attributes.adoc[]
 :revealjs_height: 900
 :stem: latexmath
 :redisio: https://redis.io/docs/latest/commands/
-
+:sectnums!:
 //== Часть 1. Введение
 :!figure-caption:
 image::redis.jpg[{image-30-width}]
@@ -776,6 +776,7 @@ image::earth_model.svg[]
 
 == Geo
 
+[source]
 ----
 redis>  GEOADD Sicily 
   13.361389 38.115556 "Palermo" 
@@ -1052,19 +1053,19 @@ Redis является одним из самых первых примеров 
 ----
 @Testcontainers
 public class RedisBackedCacheIntTest {
-    private RedisBackedCache underTest;
-    @Container
-    public GenericContainer redis = new GenericContainer(DockerImageName.parse("redis:5.0.3-alpine"))
-        .withExposedPorts(6379);
-    @BeforeEach
-    public void setUp() {
-        String address = redis.getHost();
-        Integer port = redis.getFirstMappedPort();
-        // Now we have an address and port for Redis, no matter where it is running
-        underTest = new RedisBackedCache(address, port);
-    }
-    @Test
-    public void testSomething() { .... }
+  private RedisBackedCache underTest;
+  @Container
+  public GenericContainer redis = new GenericContainer(
+    DockerImageName.parse("redis:5.0.3-alpine")).withExposedPorts(6379);
+  @BeforeEach
+  public void setUp() {
+    String address = redis.getHost();
+    Integer port = redis.getFirstMappedPort();
+    // Now we have an address and port for Redis
+    underTest = new RedisBackedCache(address, port);
+  }
+  @Test
+  public void testSomething() { .... }
 }
 ----
 
